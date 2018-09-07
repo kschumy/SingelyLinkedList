@@ -71,6 +71,10 @@ func (list *List) FindMin() (int, error) {
 	return min, nil
 }
 
+//func getData(curr *node) int {
+//	return curr.data
+//}
+
 
 // method that returns the length of the singly linked list
 func (list *List) Length() int {
@@ -84,23 +88,35 @@ func (list *List) Length() int {
 // method to return the value of the nth element from the beginning
 // assume indexing starts at 0 while counting to n
 func (list *List) FindNthFromBeginning(n int) (int, error) {
+	nthNode, err := list.getNthFromBeginning(n)
+
+	if nthNode == nil {
+		return 0, err
+	}
+
+	return nthNode.data, nil
+}
+
+// method to return the value of the nth element from the beginning
+// assume indexing starts at 0 while counting to n
+func (list *List) getNthFromBeginning(n int) (*node, error) {
 	if n < 0 {
-		return 0, fmt.Errorf("singleylinkedlist: negative index %x", n) // QUESTION: is x right?
+		return nil, invalidIndexList(n) // QUESTION: is x right?
 	}
 
 	if list.isEmpty() {
-		return 0, emptyListError()
+		return nil, emptyListError()
 	}
 
 	curr := list.head
 	for i := 0; i < n; i++ {
 		if curr == nil {
-			return 0, fmt.Errorf("singleylinkedlist: not index %x", n) // QUESTION: is x right?
+			return nil, fmt.Errorf("singleylinkedlist: not index %x", n) // QUESTION: is x right?
 		}
 		curr = curr.next
 	}
 
-	return curr.data, nil
+	return curr, nil
 }
 
 
@@ -186,46 +202,103 @@ func (list *List) getNodeBefore(value int) *node {
 }
 
 
+// method to reverse the singly linked list
+// note: the nodes should be moved and not just the values in the nodes
+func (list *List) Reverse() {
+	if list.isEmpty() { return }
+
+	curr := list.head
+	nextNode := curr.next
+	curr.next = nil
+	for nextNode != nil {
+		temp := nextNode.next
+		nextNode.next = curr
+		if temp == nil {
+			nextNode.next = curr
+			list.head = nextNode
+			return
+		}
+		curr = nextNode
+		nextNode = temp
+	}
+	fmt.Println("hello")
+}
+
+// Advanced Exercises
+// returns the value at the middle element in the singly linked list
+func (list *List) FindMiddleValue() (int, error) {
+	if list.isEmpty() { return 0, emptyListError() }
+
+	toReturn := list.head
+
+	for curr := list.head; curr.next != nil && curr.next.next != nil; curr = curr.next.next {
+		toReturn = toReturn.next
+	}
+
+	return toReturn.data, nil
+
+}
+
+// find the nth node from the end and return its value
+// assume indexing starts at 0 while counting to n
+func (list *List) FindNthFromEnd(n int) (int, error){
+	frontNode, err := list.getNthFromBeginning(n)
+	if err != nil {
+		return 0, err
+	}
+	return list.iterateInParallel(frontNode).data, nil
+}
+
+
+// frontNode cannot be nil and list cannot be empty,
+// otherwise does whatever nullpointerexception is in Go
+func (list *List) iterateInParallel(frontNode *node) *node {
+	toReturn := list.head
+	for ; frontNode.next != nil; frontNode = frontNode.next {
+		toReturn = toReturn.next
+	}
+	return toReturn
+}
+
 func emptyListError() error {
 	return fmt.Errorf("singleylinkedlist: empty list")
 }
 
-//// method to reverse the singly linked list
-//// note: the nodes should be moved and not just the values in the nodes
-//func reverse
-//fmt.Println("Not implemented"
-//end
-//
-//// Advanced Exercises
-//// returns the value at the middle element in the singly linked list
-//func find_middle_value
-//fmt.Println("Not implemented"
-//end
-//
-//// find the nth node from the end and return its value
-//// assume indexing starts at 0 while counting to n
-//func find_nth_from_end(n)
-//fmt.Println("Not implemented"
-//end
-//
-//// checks if the linked list has a cycle. A cycle exists if any node in the
-//// linked list links to a node already visited.
-//// returns true if a cycle is found, false otherwise.
-//func has_cycle
-//fmt.Println("Not implemented"
-//end
-//
-//// Creates a cycle in the linked list for testing purposes
-//// Assumes the linked list has at least one node
-//func create_cycle
-//return if @head == nil // don't do anything if the linked list is empty
-//
-//// navigate to last node
-//current = @head
-//while current.next != nil
-//current = current.next
-//end
-//
-//current.next = @head // make the last node link to first node
-//end
-//end
+func invalidIndexList(n int) error {
+	return fmt.Errorf("singleylinkedlist: negative index %x", n)
+}
+
+// checks if the linked list has a cycle. A cycle exists if any node in the
+// linked list links to a node already visited.
+// returns true if a cycle is found, false otherwise.
+func (list *List) HasCycle() bool {
+	if list.isEmpty() { return false }
+	fast, slow := list.head.next, list.head
+	for ; fast.next != nil && fast.next.next != nil; fast = fast.next.next {
+		fmt.Println(fast.next.data, ", ", slow.data)
+		if fast == slow || fast.next == slow {
+			return true
+		}
+		slow = slow.next
+	}
+	return false
+}
+
+
+// Creates a cycle in the linked list for testing purposes
+// Assumes the linked list has at least one node
+func (list *List) CreateCycle() {
+	if list.head == nil { // don't do anything if the linked list is empty
+		return
+	}
+
+	// navigate to last node
+	current := list.head
+	for current.next != nil {
+		current = current.next
+	}
+	current.next = list.head // make the last node link to first node
+}
+
+
+
